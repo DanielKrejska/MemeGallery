@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme Gallery</title>
+</head>
+<body>
+    <!-- <h1>Meme Gallery!</h1> -->
+    <main style="text-align: center;">
+        <canvas id="gl-canvas" width="512" height="512" style="border: solid black 2px;">
+            Oops ... your browser doesn't support the HTML5 canvas element
+        </canvas>
+
+        <img id = "texture-wall" src = "./Textures/wall.jpg" hidden></img>
+        <img id = "texture-floor" src = "./Textures/floor.jpg" hidden></img>
+        <img id = "texture-ceiling" src = "./Textures/ceiling.jpg" hidden></img>
+    </main>
+        
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        #version 300 es
+
+        in vec4 aPosition;
+        in vec2 aTexCoord;
+
+        out vec2 vTexCoord;
+
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        
+        void main()
+        {
+            gl_Position = uProjectionMatrix*uModelViewMatrix*aPosition;
+            vTexCoord = aTexCoord;
+        }
+    </script>
+        
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        #version 300 es
+        precision mediump float;
+
+        in vec2 vTexCoord;
+
+        out vec4 fColor;
+
+        uniform sampler2D uTextureMap;
+
+        void
+        main()
+        {
+            fColor = texture(uTextureMap, vTexCoord);
+        }
+    </script>
+
+    <script src="WebGL/initShaders.js"></script>
+    <script src="WebGL/MVnew.js"></script>
+    <script src="script3D.js"></script>
+</body>
+</html>
