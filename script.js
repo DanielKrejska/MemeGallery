@@ -217,22 +217,22 @@ function configureTexture( image ) {
 
 function quad(a, b, c, d, texture) {
     positionsArray.push(vertices[a]);
-    texCoordsArray.push(vec2(texture[0][0], texture[1][0]));
-
-    positionsArray.push(vertices[b]);
     texCoordsArray.push(vec2(texture[0][0], texture[1][1]));
 
+    positionsArray.push(vertices[b]);
+    texCoordsArray.push(vec2(texture[0][0], texture[0][1]));
+
     positionsArray.push(vertices[c]);
-    texCoordsArray.push(vec2(texture[0][1], texture[1][1]));
+    texCoordsArray.push(vec2(texture[1][0], texture[0][1]));
     
     positionsArray.push(vertices[a]);
-    texCoordsArray.push(vec2(texture[0][0], texture[1][0]));
+    texCoordsArray.push(vec2(texture[0][0], texture[1][1]));
     
     positionsArray.push(vertices[c]);
-    texCoordsArray.push(vec2(texture[0][1], texture[1][1]));
+    texCoordsArray.push(vec2(texture[1][0], texture[0][1]));
     
     positionsArray.push(vertices[d]);
-    texCoordsArray.push(vec2(texture[0][1], texture[1][0]));
+    texCoordsArray.push(vec2(texture[1][1], texture[1][1]));
     
 }
 
