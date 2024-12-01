@@ -185,9 +185,9 @@ function arrayTo3DPoints (array) {
 }
 
 var textures = document.getElementById("textures");
-var texture_wall_part =    [  0, 0.5,   1, 0.5];
-var texture_floor_part =   [0.5,   1, 0.5,   1];
-var texture_ceiling_part = [  0, 0.5,   0, 0.5];
+var texture_wall_part =    [[0  , 1  ], [0.5, 0.5]];
+var texture_floor_part =   [[0.5, 1  ], [1  , 0.5]];
+var texture_ceiling_part = [[0  , 0.5], [0.5, 0  ]];
 
 function configureTexture( image ) {
     texture = gl.createTexture();
