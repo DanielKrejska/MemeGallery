@@ -1,9 +1,40 @@
 "use strict";
+
+var canvas;
 var gl;
-var points = [];
+
+var numPositions  = 0;
+
+var near = 0.3;
+var far = 3.75;
+var radius = 4.0;
+var theta = 0.26;
+var phi = 2.3;
+var dr = 5.0 * Math.PI/180.0;
+
+var  fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
+var  aspect;       // Viewport aspect ratio
+
+var modelViewMatrixLoc, projectionMatrixLoc;
+var modelViewMatrix, projectionMatrix;
+var eye;
+const at = vec3(0.0, 0.0, 0.0);
+const up = vec3(0.0, 1.0, 0.0);
+
+var positionsArray = [];
+var colorsArray = [];
+var texCoordsArray = [];
+
+var texSize = 64;
+
+// var points = [];
+var vertices = [];
+
+var texture;
+var program;
 
 const pointsArray = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "E", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
     [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
     [1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
@@ -25,8 +56,76 @@ const pointsArray = [
     [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
     [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "S", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
+
+function quad(a, b, c, d) {
+    positionsArray.push(vertices[a]);
+    colorsArray.push(vec4(0.0, 1.0, 0.0, 1.0));
+    texCoordsArray.push(vec2(0, 0));
+
+    positionsArray.push(vertices[b]);
+    colorsArray.push(vec4(0.0, 1.0, 0.0, 1.0));
+    texCoordsArray.push(vec2(0, 1));
+
+    positionsArray.push(vertices[c]);
+    colorsArray.push(vec4(0.0, 1.0, 0.0, 1.0));
+    texCoordsArray.push(vec2(1, 1));
+    
+    positionsArray.push(vertices[a]);
+    colorsArray.push(vec4(0.0, 1.0, 0.0, 1.0));
+    texCoordsArray.push(vec2(0, 0));
+    
+    positionsArray.push(vertices[c]);
+    colorsArray.push(vec4(0.0, 1.0, 0.0, 1.0));
+    texCoordsArray.push(vec2(1, 1));
+    
+    positionsArray.push(vertices[d]);
+    colorsArray.push(vec4(0.0, 1.0, 0.0, 1.0));
+    texCoordsArray.push(vec2(1, 0));
+    
+}
+
+function labyrinth (vertices) {
+    for (let i=0; i < vertices.length; i+=4) {
+        quad(i, i+1, i+2, i+3);
+        numPositions += 6;
+    }
+}
+
+var textureWall = document.getElementById("texture-wall");
+var textureFloor = document.getElementById("texture-floor");
+var textureCeiling = document.getElementById("texture-ceiling");
+
+function configureTexture( image ) {
+    texture = gl.createTexture();
+
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGB,
+        gl.RGB,
+        gl.UNSIGNED_BYTE,
+        image
+    );
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(
+        gl.TEXTURE_2D,
+        gl.TEXTURE_MIN_FILTER,
+        gl.NEAREST_MIPMAP_LINEAR
+    );
+    gl.texParameteri(
+        gl.TEXTURE_2D,
+        gl.TEXTURE_MAG_FILTER,
+        gl.NEAREST
+    );
+    gl.uniform1i(gl.getUniformLocation(program, "uTextureMap"), 0);
+}
+
+function samePoints (point1, point2) {
+    return (point1[0] == point2[0]) && (point1[1] == point2[1]);
+}
 
 function arrayTo2DPoints (array) {
     let maxY = array.length-1;
@@ -49,9 +148,9 @@ function arrayTo2DPoints (array) {
                 }
             }
             
-            if ((array[y][x] === 0) || (x === maxX)) {
+            if ((array[y][x] !== 1) || (x === maxX)) {
                 if (line_start !== null) {
-                    if ((line_start[0] != last_wall[0]) || (line_start[1] != last_wall[1])) {
+                    if (!samePoints(line_start, last_wall)) {
                         points.push( vec2( line_start[0], line_start[1] ) );
                         points.push( vec2( last_wall[0], last_wall[1] ) );
                     }
@@ -73,9 +172,9 @@ function arrayTo2DPoints (array) {
                 }
             }
             
-            if ((array[y][x] === 0) || (y === maxY)) {
+            if ((array[y][x] !== 1) || (y === maxY)) {
                 if (line_start !== null) {
-                    if ((line_start[0] != last_wall[0]) || (line_start[1] != last_wall[1])) {
+                    if (!samePoints(line_start, last_wall)) {
                         points.push( vec2( line_start[0], line_start[1] ) );
                         points.push( vec2( last_wall[0], last_wall[1] ) );
                     }
@@ -87,48 +186,144 @@ function arrayTo2DPoints (array) {
     }
 }
 
-init();
+function arrayTo3DPoints (array) {
+    let maxY = array.length-1;
+    let maxX = array[0].length-1;
+
+    let ySparse = 1.9 / maxY;
+    let xSparse = 1.9 / maxX;
+
+    let line_start = null;
+    let last_wall = null;
+
+    // Create horizontal lines
+    for (let y = 0; y <= maxY; y++) {
+        for (let x = 0; x <= maxX; x++) {
+            if (array[y][x] === 1) {
+                last_wall = [ -0.95 + x * xSparse , 0.95 - y * ySparse ];
+
+                if (line_start === null) {
+                    line_start = [ -0.95 + x * xSparse , 0.95 - y * ySparse ];
+                }
+            }
+            
+            if ((array[y][x] !== 1) || (x === maxX)) {
+                if (line_start !== null) {
+                    if (!samePoints(line_start, last_wall)) {
+                        vertices.push( vec4(line_start[0], 0.05,  line_start[1], 1.0) );
+                        vertices.push( vec4(line_start[0], 0.95,  line_start[1], 1.0) );
+                        vertices.push( vec4(last_wall[0], 0.95,  last_wall[1], 1.0) );
+                        vertices.push( vec4(last_wall[0], 0.05,  last_wall[1], 1.0) );
+                    }
+
+                    line_start = null;
+                }
+            }
+        }
+    }
+
+    // Create vertical lines
+    for (let x = 0; x <= maxX; x++) {
+        for (let y = 0; y <= maxY; y++) {
+            if (array[y][x] === 1) {
+                last_wall = [ -0.95 + x * xSparse , 0.95 - y * ySparse ];
+
+                if (line_start === null) {
+                    line_start = [ -0.95 + x * xSparse , 0.95 - y * ySparse ];
+                }
+            }
+            
+            if ((array[y][x] !== 1) || (y === maxY)) {
+                if (line_start !== null) {
+                    if (!samePoints(line_start, last_wall)) {
+                        vertices.push( vec4(line_start[0], 0.05,  line_start[1], 1.0) );
+                        vertices.push( vec4(line_start[0], 0.95,  line_start[1], 1.0) );
+                        vertices.push( vec4(last_wall[0], 0.95,  last_wall[1], 1.0) );
+                        vertices.push( vec4(last_wall[0], 0.05,  last_wall[1], 1.0) );
+                    }
+
+                    line_start = null;
+                }
+            }
+        }
+    }
+}
+
+window.onload = init;
 
 function init()
 {
     var canvas = document.getElementById( "gl-canvas" );
 
     gl = canvas.getContext('webgl2');
-    if ( !gl ) { alert( "WebGL isn't available" ); }
+    if (!gl) alert("WebGL 2.0 isn't available" );
 
-    arrayTo2DPoints(pointsArray);
+    gl.viewport(0, 0, canvas.width, canvas.height);
 
-    console.log(points);
-    
+    aspect =  canvas.width/canvas.height;
+
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    gl.enable(gl.DEPTH_TEST);
+
     //
-    //  Configure WebGL
-    //
-    gl.viewport( 0, 0, canvas.width, canvas.height );
-    gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
-
     //  Load shaders and initialize attribute buffers
+    //
+    program = initShaders(gl, "vertex-shader", "fragment-shader");
+    gl.useProgram(program);
 
-    var program = initShaders( gl, "vertex-shader", "fragment-shader" );
-    gl.useProgram( program );
+    arrayTo3DPoints(pointsArray);
+    labyrinth(vertices);
 
-    // Load the data into the GPU
+    // console.log(points);
+    console.log(vertices);
+    
+    var vBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(positionsArray), gl.STATIC_DRAW);
 
-    var bufferId = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId );
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
+    var positionLoc = gl.getAttribLocation(program, "aPosition");
+    gl.vertexAttribPointer(positionLoc, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(positionLoc);
 
-    // Associate out shader variables with our data buffer
 
-    var positionLoc = gl.getAttribLocation( program, "aPosition" );
-    gl.vertexAttribPointer( positionLoc , 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( positionLoc );
+    configureTexture(textureWall);
+
+    var tBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(texCoordsArray), gl.STATIC_DRAW);
+
+    var texCoordLoc = gl.getAttribLocation(program, "aTexCoord");
+    gl.vertexAttribPointer(texCoordLoc, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(texCoordLoc);
+
+
+    modelViewMatrixLoc = gl.getUniformLocation(program, "uModelViewMatrix");
+    projectionMatrixLoc = gl.getUniformLocation(program, "uProjectionMatrix");
+
 
     render();
 };
 
 function render() {
-    gl.clear( gl.COLOR_BUFFER_BIT );
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    gl.drawArrays( gl.POINTS, 0, points.length );
-    gl.drawArrays( gl.LINES, 0, points.length );
+    eye = vec3(radius*Math.sin(theta)*Math.cos(phi),
+        radius*Math.sin(theta)*Math.sin(phi), radius*Math.cos(theta));
+
+    projectionMatrix = perspective(fovy, aspect, near, far);
+    var S = scale(0.5,0.5,0.5);
+
+    var T = translate(0, -0.5, 0.8);
+    
+    // Cube in the middle
+    // just need to Scale, no translate, coord are already centered
+    modelViewMatrix = lookAt(eye, at , up);
+
+    // update modelview matrix with required transformation(s)
+    modelViewMatrix = mult(modelViewMatrix,T);
+    modelViewMatrix = mult(modelViewMatrix,S);
+
+    gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
+    gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
+    gl.drawArrays(gl.TRIANGLES, 0, numPositions);
 }

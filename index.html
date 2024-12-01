@@ -15,33 +15,52 @@
     </style>
 </head>
 <body>
+    <!-- <h1>Meme Gallery!</h1> -->
     <main style="text-align: center;">
         <canvas id="gl-canvas" width="512" height="512" 
-        style="border: solid black 2px; background-color: #da6052;">
+        style="border: solid black 2px;">
         <!-- canvas background color to test opacity/clearing bugs, it's easier to notice wrong rendering -->
             Oops ... your browser doesn't support the HTML5 canvas element
         </canvas>
+
+        <img id = "texture-wall" src = "./Textures/wall.jpg" hidden></img>
+        <img id = "texture-floor" src = "./Textures/floor.jpg" hidden></img>
+        <img id = "texture-ceiling" src = "./Textures/ceiling.jpg" hidden></img>
     </main>
         
     <script id="vertex-shader" type="x-shader/x-vertex">
         #version 300 es
+
         in vec4 aPosition;
-        void
-        main()
+        in vec2 aTexCoord;
+
+        out vec2 vTexCoord;
+
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        
+        void main()
         {
-          gl_PointSize = 10.0;
-          gl_Position = aPosition;
+            gl_Position = uProjectionMatrix*uModelViewMatrix*aPosition;
+            vTexCoord = aTexCoord;
         }
     </script>
         
     <script id="fragment-shader" type="x-shader/x-fragment">
         #version 300 es
         precision mediump float;
+
+        in vec2 vTexCoord;
+
         out vec4 fColor;
+
+        uniform sampler2D uTextureMap;
+
         void
         main()
         {
-          fColor = vec4(1.0,0.0,0.0,1.0);
+            // fColor = texture(uTextureMap, vTexCoord);
+            fColor = vec4(1.0,0.0,0.0,1.0);
         }
     </script>
 
