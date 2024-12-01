@@ -22,14 +22,11 @@ const at = vec3(0.0, 0.0, 0.0);
 const up = vec3(0.0, 1.0, 0.0);
 
 var positionsArray = [];
-var texCoordsArray = [];
-
-var texSize = 64;
+var colorsArray = [];
 
 // var points = [];
 var vertices = [];
 
-var texture;
 var program;
 
 const pointsArray = [
@@ -57,6 +54,56 @@ const pointsArray = [
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "S", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
+
+function quad(a, b, c, d, color) {
+    positionsArray.push(vertices[a]);
+    colorsArray.push(vec4(color[0], color[1], color[2], color[3]));
+
+    positionsArray.push(vertices[b]);
+    colorsArray.push(vec4(color[0], color[1], color[2], color[3]));
+
+    positionsArray.push(vertices[c]);
+    colorsArray.push(vec4(color[0], color[1], color[2], color[3]));
+    
+    positionsArray.push(vertices[a]);
+    colorsArray.push(vec4(color[0], color[1], color[2], color[3]));
+    
+    positionsArray.push(vertices[c]);
+    colorsArray.push(vec4(color[0], color[1], color[2], color[3]));
+    
+    positionsArray.push(vertices[d]);
+    colorsArray.push(vec4(color[0], color[1], color[2], color[3]));
+    
+}
+
+function labyrinth (vertices) {
+    for (let i=0; i < vertices.length; i+=4) {
+        quad(i, i+1, i+2, i+3, [1.0, 0.0, 0.0, 1.0]);
+        numPositions += 6;
+    }
+}
+
+function floor () {
+    vertices.push( vec4( 0.95, 0.05,  0.95, 1.0) );
+    vertices.push( vec4( 0.95, 0.05, -0.95, 1.0) );
+    vertices.push( vec4(-0.95, 0.05, -0.95, 1.0) );
+    vertices.push( vec4(-0.95, 0.05,  0.95, 1.0) );
+
+    quad(vertices.length - 1, vertices.length - 2, vertices.length - 3, vertices.length - 4, [0.0, 1.0, 0.0, 1.0]);
+
+    numPositions += 6;
+}
+
+function ceiling () {
+    vertices.push( vec4( 0.95, 0.95,  0.95, 1.0) );
+    vertices.push( vec4( 0.95, 0.95, -0.95, 1.0) );
+    vertices.push( vec4(-0.95, 0.95, -0.95, 1.0) );
+    vertices.push( vec4(-0.95, 0.95,  0.95, 1.0) );
+
+    quad(vertices.length - 1, vertices.length - 2, vertices.length - 3, vertices.length - 4, [0.0, 0.0, 1.0, 1.0]);
+
+    numPositions += 6;
+}
 
 function samePoints (point1, point2) {
     return (point1[0] == point2[0]) && (point1[1] == point2[1]);
@@ -184,87 +231,6 @@ function arrayTo3DPoints (array) {
     }
 }
 
-var textures = document.getElementById("textures");
-var texture_wall_part =    [  0, 0.5,   1, 0.5];
-var texture_floor_part =   [0.5,   1, 0.5,   1];
-var texture_ceiling_part = [  0, 0.5,   0, 0.5];
-
-function configureTexture( image ) {
-    texture = gl.createTexture();
-
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGB,
-        gl.RGB,
-        gl.UNSIGNED_BYTE,
-        image
-    );
-    gl.generateMipmap(gl.TEXTURE_2D);
-    gl.texParameteri(
-        gl.TEXTURE_2D,
-        gl.TEXTURE_MIN_FILTER,
-        gl.NEAREST_MIPMAP_LINEAR
-    );
-    gl.texParameteri(
-        gl.TEXTURE_2D,
-        gl.TEXTURE_MAG_FILTER,
-        gl.NEAREST
-    );
-    gl.uniform1i(gl.getUniformLocation(program, "uTextureMap"), 0);
-}
-
-function quad(a, b, c, d, texture) {
-    positionsArray.push(vertices[a]);
-    texCoordsArray.push(vec2(texture[0][0], texture[1][0]));
-
-    positionsArray.push(vertices[b]);
-    texCoordsArray.push(vec2(texture[0][0], texture[1][1]));
-
-    positionsArray.push(vertices[c]);
-    texCoordsArray.push(vec2(texture[0][1], texture[1][1]));
-    
-    positionsArray.push(vertices[a]);
-    texCoordsArray.push(vec2(texture[0][0], texture[1][0]));
-    
-    positionsArray.push(vertices[c]);
-    texCoordsArray.push(vec2(texture[0][1], texture[1][1]));
-    
-    positionsArray.push(vertices[d]);
-    texCoordsArray.push(vec2(texture[0][1], texture[1][0]));
-    
-}
-
-function labyrinth (vertices) {
-    for (let i=0; i < vertices.length; i+=4) {
-        quad(i, i+1, i+2, i+3, texture_wall_part);
-        numPositions += 6;
-    }
-}
-
-function floor () {
-    vertices.push( vec4( 0.95, 0.05,  0.95, 1.0) );
-    vertices.push( vec4( 0.95, 0.05, -0.95, 1.0) );
-    vertices.push( vec4(-0.95, 0.05, -0.95, 1.0) );
-    vertices.push( vec4(-0.95, 0.05,  0.95, 1.0) );
-
-    quad(vertices.length - 1, vertices.length - 2, vertices.length - 3, vertices.length - 4, texture_floor_part);
-
-    numPositions += 6;
-}
-
-function ceiling () {
-    vertices.push( vec4( 0.95, 0.95,  0.95, 1.0) );
-    vertices.push( vec4( 0.95, 0.95, -0.95, 1.0) );
-    vertices.push( vec4(-0.95, 0.95, -0.95, 1.0) );
-    vertices.push( vec4(-0.95, 0.95,  0.95, 1.0) );
-
-    quad(vertices.length - 1, vertices.length - 2, vertices.length - 3, vertices.length - 4, texture_ceiling_part);
-
-    numPositions += 6;
-}
-
 window.onload = init;
 
 function init()
@@ -304,15 +270,13 @@ function init()
     gl.enableVertexAttribArray(positionLoc);
 
 
-    configureTexture(textures);
+    var cBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(colorsArray), gl.STATIC_DRAW);
 
-    var tBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(texCoordsArray), gl.STATIC_DRAW);
-
-    var texCoordLoc = gl.getAttribLocation(program, "aTexCoord");
-    gl.vertexAttribPointer(texCoordLoc, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(texCoordLoc);
+    var colorLoc = gl.getAttribLocation( program, "aColor" );
+    gl.vertexAttribPointer( colorLoc, 4, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( colorLoc );
 
 
     modelViewMatrixLoc = gl.getUniformLocation(program, "uModelViewMatrix");

@@ -23,16 +23,18 @@
             Oops ... your browser doesn't support the HTML5 canvas element
         </canvas>
 
-        <img id = "textures" src = "Textures.jpg" hidden></img>
+        <img id = "texture-wall" src = "./Textures/wall.jpg" hidden></img>
+        <img id = "texture-floor" src = "./Textures/floor.jpg" hidden></img>
+        <img id = "texture-ceiling" src = "./Textures/ceiling.jpg" hidden></img>
     </main>
         
     <script id="vertex-shader" type="x-shader/x-vertex">
         #version 300 es
 
         in vec4 aPosition;
-        in vec2 aTexCoord;
-
-        out vec2 vTexCoord;
+        
+        in  vec4 aColor;
+        out vec4 vColor;
 
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
@@ -40,7 +42,7 @@
         void main()
         {
             gl_Position = uProjectionMatrix*uModelViewMatrix*aPosition;
-            vTexCoord = aTexCoord;
+            vColor = aColor;
         }
     </script>
         
@@ -48,21 +50,18 @@
         #version 300 es
         precision mediump float;
 
-        in vec2 vTexCoord;
-
+        in vec4 vColor;
         out vec4 fColor;
-
-        uniform sampler2D uTextureMap;
 
         void
         main()
         {
-            fColor = texture(uTextureMap, vTexCoord);
+            fColor = vColor;
         }
     </script>
 
     <script src="WebGL/initShaders.js"></script>
     <script src="WebGL/MVnew.js"></script>
-    <script src="script.js"></script>
+    <script src="scriptTextureless.js"></script>
 </body>
 </html>
