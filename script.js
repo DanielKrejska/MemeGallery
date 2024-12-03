@@ -18,7 +18,7 @@ var  aspect;       // Viewport aspect ratio
 var modelViewMatrixLoc, projectionMatrixLoc;
 var modelViewMatrix, projectionMatrix;
 var eye;
-const at = vec3(0.0, 0.0, 0.0);
+var at;
 const up = vec3(0.0, 1.0, 0.0);
 
 var positionsArray = [];
@@ -33,100 +33,47 @@ var texture;
 var program;
 
 const pointsArray = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "E", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
-    [1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
-    [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-    [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
-    [1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
-    [1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1],
-    [1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
-    [1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-    [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1],
-    [1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
-    [1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
-    [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "S", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-]
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "Entrance", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,     0,      1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,     1,      1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0,     0,      1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+    [1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1,     0,      1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,     0,      1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+    [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1,     1,      1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1,     0,      0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,     0,      1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1,     0,      1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+    [1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1,     0,      1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1],
+    [1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1,     0,      1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1,     1,      1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0,     0,      1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1,     0,      1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1,     0,      0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+    [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1,     0,      1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0,     0,      1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1,     1,      1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0,     0,      0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1,     0,      1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,     0,      1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   "Exit",   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+];
+
+var ySparse;
+var xSparse;
+
+var yUser;
+var xUser;
 
 function samePoints (point1, point2) {
     return (point1[0] == point2[0]) && (point1[1] == point2[1]);
-}
-
-function arrayTo2DPoints (array) {
-    let maxY = array.length-1;
-    let maxX = array[0].length-1;
-
-    let ySparse = 1.9 / maxY;
-    let xSparse = 1.9 / maxX;
-
-    let line_start = null;
-    let last_wall = null;
-
-    // Create horizontal lines
-    for (let y = 0; y <= maxY; y++) {
-        for (let x = 0; x <= maxX; x++) {
-            if (array[y][x] === 1) {
-                last_wall = [ -0.95 + x * xSparse , 0.95 - y * ySparse ];
-
-                if (line_start === null) {
-                    line_start = [ -0.95 + x * xSparse , 0.95 - y * ySparse ];
-                }
-            }
-            
-            if ((array[y][x] !== 1) || (x === maxX)) {
-                if (line_start !== null) {
-                    if (!samePoints(line_start, last_wall)) {
-                        points.push( vec2( line_start[0], line_start[1] ) );
-                        points.push( vec2( last_wall[0], last_wall[1] ) );
-                    }
-
-                    line_start = null;
-                }
-            }
-        }
-    }
-
-    // Create vertical lines
-    for (let x = 0; x <= maxX; x++) {
-        for (let y = 0; y <= maxY; y++) {
-            if (array[y][x] === 1) {
-                last_wall = [ -0.95 + x * xSparse , 0.95 - y * ySparse ];
-
-                if (line_start === null) {
-                    line_start = [ -0.95 + x * xSparse , 0.95 - y * ySparse ];
-                }
-            }
-            
-            if ((array[y][x] !== 1) || (y === maxY)) {
-                if (line_start !== null) {
-                    if (!samePoints(line_start, last_wall)) {
-                        points.push( vec2( line_start[0], line_start[1] ) );
-                        points.push( vec2( last_wall[0], last_wall[1] ) );
-                    }
-
-                    line_start = null;
-                }
-            }
-        }
-    }
 }
 
 function arrayTo3DPoints (array) {
     let maxY = array.length-1;
     let maxX = array[0].length-1;
 
-    let ySparse = 1.9 / maxY;
-    let xSparse = 1.9 / maxX;
+    ySparse = 1.9 / maxY;
+    xSparse = 1.9 / maxX;
 
     let line_start = null;
     let last_wall = null;
@@ -318,6 +265,14 @@ function init()
     modelViewMatrixLoc = gl.getUniformLocation(program, "uModelViewMatrix");
     projectionMatrixLoc = gl.getUniformLocation(program, "uProjectionMatrix");
 
+    for (let y = 0; y < pointsArray.length; y++) {
+        for (let x = 0; x < pointsArray[0].length; x++) {
+            if (pointsArray[y][x] == "Entrance") {
+                xUser = x;
+                yUser = y;
+            }
+        }
+    }
 
     render();
 };
@@ -325,21 +280,23 @@ function init()
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    eye = vec3(radius*Math.sin(theta)*Math.cos(phi),
-        radius*Math.sin(theta)*Math.sin(phi), radius*Math.cos(theta));
+    eye = vec3(-0.95 + xUser * xSparse, 0.1, 0.95 - yUser * ySparse);
+    at = vec3(-0.95 + xUser * xSparse, 0.1, 0.95 - (yUser + 1) * ySparse);
+
+    console.log(eye);
 
     projectionMatrix = perspective(fovy, aspect, near, far);
-    var S = scale(0.5,0.5,0.5);
+    // var S = scale(0.5,0.5,0.5);
 
-    var T = translate(0, -0.5, 0.8);
+    // var T = translate(0, -0.5, 0.8);
     
     // Cube in the middle
     // just need to Scale, no translate, coord are already centered
     modelViewMatrix = lookAt(eye, at , up);
 
     // update modelview matrix with required transformation(s)
-    modelViewMatrix = mult(modelViewMatrix,T);
-    modelViewMatrix = mult(modelViewMatrix,S);
+    // modelViewMatrix = mult(modelViewMatrix,T);
+    // modelViewMatrix = mult(modelViewMatrix,S);
 
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
     gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
