@@ -61,6 +61,13 @@ var xSparse;
 var yUser;
 var xUser;
 
+var dir = [0, 3];
+
+var move_forward = false;
+var move_behind = false;
+
+var list = [0, -1, 0, 1];
+
 function quad(a, b, c, d, color) {
     positionsArray.push(vertices[a]);
     colorsArray.push(vec4(color[0], color[1], color[2], color[3]));
@@ -239,31 +246,78 @@ function init()
         }
     }
 
+    document.querySelector('body').addEventListener('keydown', function (event) {
+        switch (event.key) {
+            case 'ArrowUp':
+                move_forward = true;
+                break;
+            case 'ArrowDown':
+                move_behind = true;
+                break;
+        }
+    });
+
+    document.querySelector('body').addEventListener('keyup', function (event) {
+        switch (event.key) {
+            case 'ArrowUp':
+                move_forward = false;
+                break;
+            case 'ArrowDown':
+                move_behind = false;
+                break;
+            case 'ArrowLeft':
+                dir[0] += 1;
+                if (dir[0] == 4) {
+                    dir[0] = 0;
+                }
+
+                dir[1] += 1;
+                if (dir[1] == 4) {
+                    dir[1] = 0;
+                }
+                break;
+            case 'ArrowRight':
+                dir[0] -= 1;
+                if (dir[0] == -1) {
+                    dir[0] = 3;
+                }
+
+                dir[1] -= 1;
+                if (dir[1] == -1) {
+                    dir[1] = 3;
+                }
+                break;
+        }
+    });
+
     render();
 };
 
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    eye = vec3(-0.95 + xUser * xSparse, 0.1, 0.95 - yUser * ySparse);
-    at = vec3(-0.95 + xUser * xSparse, 0.1, 0.95 - (yUser + 1) * ySparse);
+    if (move_behind) {
+        xUser -= list[dir[0]];
+        yUser -= list[dir[1]];
+    }
 
-    console.log(eye);
+    if (move_forward) {
+        xUser += list[dir[0]];
+        yUser += list[dir[1]];
+    }
+
+    eye = vec3(-0.95 + xUser * xSparse, 0.2, 0.95 - yUser * ySparse);
+    at = vec3(-0.95 + (xUser + list[dir[0]]) * xSparse, 0.2, 0.95 - (yUser + list[dir[1]]) * ySparse);
+
+    // console.log(eye);
 
     projectionMatrix = perspective(fovy, aspect, near, far);
-    // var S = scale(0.5,0.5,0.5);
-
-    // var T = translate(0, -0.5, 0.8);
     
-    // Cube in the middle
-    // just need to Scale, no translate, coord are already centered
     modelViewMatrix = lookAt(eye, at , up);
-
-    // update modelview matrix with required transformation(s)
-    // modelViewMatrix = mult(modelViewMatrix,T);
-    // modelViewMatrix = mult(modelViewMatrix,S);
 
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
     gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
     gl.drawArrays(gl.TRIANGLES, 0, numPositions);
+
+    requestAnimationFrame(render);
 }
