@@ -297,13 +297,23 @@ function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     if (move_behind) {
-        xUser -= list[dir[0]];
-        yUser -= list[dir[1]];
+        let xMoveCoord = xUser - list[dir[0]];
+        let yMoveCoord = yUser - list[dir[1]];
+
+        if (pointsArray[yMoveCoord] == undefined || pointsArray[yMoveCoord][xMoveCoord] !== 1) {
+            xUser -= list[dir[0]];
+            yUser -= list[dir[1]];
+        }
     }
 
     if (move_forward) {
-        xUser += list[dir[0]];
-        yUser += list[dir[1]];
+        let xMoveCoord = xUser + list[dir[0]];
+        let yMoveCoord = yUser + list[dir[1]];
+
+        if (pointsArray[yMoveCoord] == undefined || pointsArray[yMoveCoord][xMoveCoord] !== 1) {
+            xUser += list[dir[0]];
+            yUser += list[dir[1]];
+        }
     }
 
     eye = vec3(-0.95 + xUser * xSparse, 0.2, 0.95 - yUser * ySparse);
